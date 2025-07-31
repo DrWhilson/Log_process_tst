@@ -3,7 +3,7 @@ import json
 import argparse
 from collections import defaultdict
 
-import tabulate
+from tabulate import tabulate
 
 
 def load_log(path):
@@ -51,16 +51,27 @@ if __name__ == "__main__":
     log = load_mult_log(args.file)
 
     # Обработка данных
-    # Создаем словарь для хранения сумм и количеств
     group_data = defaultdict(lambda: {"sum": 0, "count": 0})
 
     for item in log:
-        url = item["url"]
+        urlClass = item["url"]
         vag = item["response_time"]
-        group_data[url]["sum"] += vag
-        group_data[url]["count"] += 1
+        group_data[urlClass]["sum"] += vag
+        group_data[urlClass]["count"] += 1
 
     result = [
         {"url": url, "average_vag": data["sum"] / data["count"], "count": data["count"]}
         for url, data in group_data.items()
     ]
+
+    # Вывод отчёта
+    header = ["", "hander", "total", "average_vag"]
+    body = []
+    for index, urlClass in enumerate(result):
+        row = [index]
+        row.append(urlClass["url"])
+        row.append(urlClass["count"])
+        row.append(round(urlClass["average_vag"], 3))
+        body.append(row)
+
+    print(tabulate(body, header, tablefmt="grid"))
