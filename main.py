@@ -13,6 +13,18 @@ def load_log(path):
     return data
 
 
+def load_mult_log(files):
+    data = []
+    for file_path in files:
+        if not os.path.exists(file_path):
+            print(f"Файл {file_path} не найден")
+            continue
+        file_data = load_log(file_path)
+        data.extend(file_data)
+
+    return data
+
+
 if __name__ == "__main__":
     # Параметры
     parser = argparse.ArgumentParser(description="Генератор отчётов")
@@ -34,14 +46,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Загрузка данных
-
-    data = []
-    for file_path in args.file:
-        if not os.path.exists(file_path):
-            print(f"Файл {file_path} не найден")
-            continue
-        file_data = load_log(file_path)
-        data.extend(file_data)
+    data = load_mult_log(args.file)
 
     # Обработка данных
     print(len(data))
