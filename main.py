@@ -1,29 +1,47 @@
+import os
 import json
 import argparse
 import tabulate
 
-parser = argparse.ArgumentParser(description="Генератор отчётов")
 
-parser.add_argument(
-    "--file",
-    required=True,
-    type=str,
-    help="Путь к файлу с данными (обязательно)"
-)
-parser.add_argument(
-    "--report",
-    type=str,
-    default="average",
-    help="Отчёт по полю (по умолчанию: average)"
-)
+def load_log(path):
+    data = []
+    with open(path, "r", encoding="utf-8") as file:
+        for line in file:
+            data.append(json.loads(line.strip()))
 
-args = parser.parse_args()
+    return data
 
 
-data = []
-with open('example1.log', 'r', encoding='utf-8') as file:
-    for line in file:
-        data.append(json.loads(line.strip()))
+if __name__ == "__main__":
+    # Параметры
+    parser = argparse.ArgumentParser(description="Генератор отчётов")
 
-for i in range(len(data)):
-    print(data[i])
+    parser.add_argument(
+        "--file",
+        nargs="+",
+        required=True,
+        type=str,
+        help="Путь к файлу с данными (обязательно)",
+    )
+    parser.add_argument(
+        "--report",
+        type=str,
+        default="average",
+        help="Отчёт по полю (по умолчанию: average)",
+    )
+
+    args = parser.parse_args()
+
+    # Загрузка данных
+
+    data = []
+    for file_path in args.file:
+        if not os.path.exists(file_path):
+            print(f"Файл {file_path} не найден")
+            continue
+        file_data = load_log(file_path)
+        data.extend(file_data)
+
+    # Обработка данных
+    print(len(data))
