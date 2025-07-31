@@ -37,11 +37,26 @@ def calc_reprt(data, search_param):
         group_data[urlClass]["count"] += 1
 
     result = [
-        {"url": url, "average_vag": data["sum"] / data["count"], "count": data["count"]}
+        {
+            "url": url,
+            "avg_response_time": data["sum"] / data["count"],
+            "count": data["count"],
+        }
         for url, data in group_data.items()
     ]
 
     return result
+
+
+def print_table(header, data, dict):
+    data = []
+    for index, urlClass in enumerate(dict):
+        row = [index]
+        for key in body:
+            row.append(urlClass[key])
+        data.append(row)
+
+    print(tabulate(data, header, tablefmt="grid"))
 
 
 if __name__ == "__main__":
@@ -71,13 +86,6 @@ if __name__ == "__main__":
     report = calc_reprt(log, args.report)
 
     # Вывод отчёта
-    header = ["", "hander", "total", "average_vag"]
-    body = []
-    for index, urlClass in enumerate(report):
-        row = [index]
-        row.append(urlClass["url"])
-        row.append(urlClass["count"])
-        row.append(round(urlClass["average_vag"], 3))
-        body.append(row)
-
-    print(tabulate(body, header, tablefmt="grid"))
+    header = ["", "hander", "total", "avg_response_time"]
+    body = ["url", "count", "avg_response_time"]
+    print_table(header, body, report)
