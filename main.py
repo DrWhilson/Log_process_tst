@@ -27,7 +27,14 @@ def load_mult_log(files):
     return data
 
 
-def calc_reprt(data, search_param):
+def apply_filter(data, date_filter):
+    return [item for item in data if date_filter in item["@timestamp"]]
+
+
+def calc_reprt(data, search_param, date_filter):
+    if date_filter != "all":
+        data = apply_filter(data, date_filter)
+
     group_data = defaultdict(lambda: {"sum": 0, "count": 0})
 
     for item in data:
@@ -68,13 +75,19 @@ if __name__ == "__main__":
         nargs="+",
         required=True,
         type=str,
-        help="Путь к файлу с данными (обязательно)",
+        help="Путь к файлам с данными (обязательно)",
     )
     parser.add_argument(
         "--report",
         type=str,
         default="average",
         help="Отчёт по полю (по умолчанию: average)",
+    )
+    parser.add_argument(
+        "--date",
+        type=str,
+        default="all",
+        help="Фильтр по дате (по умолчанию: all)",
     )
 
     args = parser.parse_args()
@@ -83,7 +96,7 @@ if __name__ == "__main__":
     log = load_mult_log(args.file)
 
     # Обработка данных
-    report = calc_reprt(log, args.report)
+    report = calc_reprt(log, args.report, args.date)
 
     # Вывод отчёта
     header = ["", "hander", "total", "avg_response_time"]
