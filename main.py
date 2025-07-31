@@ -1,6 +1,8 @@
 import os
 import json
 import argparse
+from collections import defaultdict
+
 import tabulate
 
 
@@ -46,7 +48,19 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Загрузка данных
-    data = load_mult_log(args.file)
+    log = load_mult_log(args.file)
 
     # Обработка данных
-    print(len(data))
+    # Создаем словарь для хранения сумм и количеств
+    group_data = defaultdict(lambda: {"sum": 0, "count": 0})
+
+    for item in log:
+        url = item["url"]
+        vag = item["response_time"]
+        group_data[url]["sum"] += vag
+        group_data[url]["count"] += 1
+
+    result = [
+        {"url": url, "average_vag": data["sum"] / data["count"], "count": data["count"]}
+        for url, data in group_data.items()
+    ]
