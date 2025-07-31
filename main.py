@@ -7,12 +7,8 @@ from tabulate import tabulate
 
 
 def load_log(path):
-    data = []
     with open(path, "r", encoding="utf-8") as file:
-        for line in file:
-            data.append(json.loads(line.strip()))
-
-    return data
+        return [json.loads(line) for line in file]
 
 
 def load_mult_log(files):
@@ -55,15 +51,13 @@ def calc_reprt(data, search_param, date_filter):
     return result
 
 
-def print_table(header, data, dict):
-    data = []
-    for index, urlClass in enumerate(dict):
-        row = [index]
-        for key in body:
-            row.append(urlClass[key])
-        data.append(row)
+def print_table(header, body, dict):
+    table_data = [
+        [index] + [url_class[key] for key in body]
+        for index, url_class in enumerate(dict)
+    ]
 
-    print(tabulate(data, header, tablefmt="grid"))
+    print(tabulate(table_data, header, tablefmt="grid"))
 
 
 if __name__ == "__main__":
