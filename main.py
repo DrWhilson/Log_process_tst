@@ -27,35 +27,66 @@ def apply_filter(data, date_filter):
     return [item for item in data if date_filter in item["@timestamp"]]
 
 
-def calc_reprt(data, search_param, date_filter):
-    if date_filter != "all":
-        data = apply_filter(data, date_filter)
-
-    group_data = defaultdict(lambda: {"sum": 0, "count": 0})
+def group_log(data, group_key):
+    group_data = defaultdict(lambda: defaultdict(list))
 
     for item in data:
-        urlClass = item["url"]
-        vag = item["response_time"]
-        group_data[urlClass]["sum"] += vag
-        group_data[urlClass]["count"] += 1
+        group_value = item[group_key]
 
-    result = [
-        {
-            "url": url,
-            "avg_response_time": data["sum"] / data["count"],
-            "count": data["count"],
-        }
-        for url, data in group_data.items()
-    ]
+        keys_list = [k for k in item.keys() if k != group_key]
+
+        for key in keys_list:
+            group_data[group_value][key].append(item[key])
+    return group_data
+
+
+def calc_report_values(data, group="url", search_param="none", method="avg"):
+    # Группируем лог по одному полю
+    group_data = group_log(data, group)
+
+    result = []
+
+    # Считаем отчёт по группам
+    for group_key, values in group_data.items():
+        item_result = {group: group_key, "count": len(values[next(iter(values))])}
+
+        if search_param != "none":
+            match method:
+                case "avg":
+                    item_result[f"avg_{search_param}"] = sum(
+                        values[search_param]
+                    ) / len(values[search_param])
+                case "min":
+                    item_result[f"avg_{search_param}"] = min(values[search_param])
+                case "max":
+                    item_result[f"avg_{search_param}"] = max(values[search_param])
+
+        result.append(item_result)
 
     return result
 
 
-def print_table(header, body, dict):
-    table_data = [
-        [index] + [url_class[key] for key in body]
-        for index, url_class in enumerate(dict)
-    ]
+def form_report(data, search_param, date_filter):
+    if date_filter != "all":
+        data = apply_filter(data, date_filter)
+
+    result = None
+    match search_param:
+        case "average":
+            result = calc_report_values(data, "url", "response_time", "avg")
+        case "browser":
+            result = calc_report_values(data, "http_user_agent")
+
+    return result
+
+
+def print_table(header, report):
+    table_data = []
+    for index, g_class in enumerate(report):
+        row = [index]
+        for keys in g_class:
+            row.append(g_class[keys])
+        table_data.append(row)
 
     print(tabulate(table_data, header, tablefmt="grid"))
 
@@ -90,9 +121,10 @@ if __name__ == "__main__":
     log = load_mult_log(args.file)
 
     # Обработка данных
-    report = calc_reprt(log, args.report, args.date)
+    report = form_report(log, args.report, args.date)
 
     # Вывод отчёта
-    header = ["", "hander", "total", "avg_response_time"]
-    body = ["url", "count", "avg_response_time"]
-    print_table(header, body, report)
+    header = ["", "group", "total"]
+    if [len(report[0].keys())]:
+        header.append("calc_param")
+    print_table(header, report)
