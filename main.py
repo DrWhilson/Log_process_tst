@@ -1,7 +1,9 @@
 import os
+
 import json
 import argparse
 from collections import defaultdict
+from datetime import datetime, timedelta
 
 from tabulate import tabulate
 
@@ -24,7 +26,29 @@ def load_mult_log(files):
 
 
 def apply_filter(data, date_filter):
-    return [item for item in data if date_filter in item["@timestamp"]]
+
+    if not "/" in date_filter:
+        return [item for item in data if date_filter in item["@timestamp"]]
+    else:
+        start, stop = date_filter.split("/")
+        start = datetime.fromisoformat(start)
+        stop = (
+            datetime.fromisoformat(stop)
+            + timedelta(days=1)
+            - timedelta(microseconds=1)  # включаем границу по часам
+        )
+
+        if stop < start:
+            print("Диапазон дат необходимо указывать от большего к меньшему")
+            return data
+
+        return [
+            item
+            for item in data
+            if start
+            <= datetime.fromisoformat(item["@timestamp"]).replace(tzinfo=None)
+            <= stop
+        ]
 
 
 def group_log(data, group_key):
@@ -74,6 +98,9 @@ def form_report(data, search_param, date_filter):
     if date_filter != "all":
         data = apply_filter(data, date_filter)
 
+    if data == []:
+        return None
+
     match search_param:
         case "average":
             return calc_report_values(data, "url", "response_time", "avg")
@@ -111,7 +138,7 @@ if __name__ == "__main__":
         "--date",
         type=str,
         default="all",
-        help="Фильтр по дате (по умолчанию: all)",
+        help="Фильтр по дате формат записи Y-M-D/Y-M-D или T-M-D для обного дня (по умолчанию: all)",
     )
 
     args = parser.parse_args()
