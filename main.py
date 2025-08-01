@@ -33,10 +33,9 @@ def group_log(data, group_key):
     for item in data:
         group_value = item[group_key]
 
-        keys_list = [k for k in item.keys() if k != group_key]
-
-        for key in keys_list:
-            group_data[group_value][key].append(item[key])
+        for key, value in item.items():
+            if key != group_key:
+                group_data[group_value][key].append(value)
     return group_data
 
 
@@ -48,18 +47,23 @@ def calc_report_values(data, group="url", search_param="none", method="avg"):
 
     # Считаем отчёт по группам
     for group_key, values in group_data.items():
-        item_result = {group: group_key, "count": len(values[next(iter(values))])}
+        item_result = {
+            group: group_key,
+            "count": len(values[next(iter(values))]) if values else 0,
+        }
 
         if search_param != "none":
+            param_values = values[search_param]
+            # Рассчёт по необходимой функции
             match method:
                 case "avg":
-                    item_result[f"avg_{search_param}"] = sum(
-                        values[search_param]
-                    ) / len(values[search_param])
+                    item_result[f"avg_{search_param}"] = sum(param_values) / len(
+                        param_values
+                    )
                 case "min":
-                    item_result[f"avg_{search_param}"] = min(values[search_param])
+                    item_result[f"avg_{search_param}"] = min(param_values)
                 case "max":
-                    item_result[f"avg_{search_param}"] = max(values[search_param])
+                    item_result[f"avg_{search_param}"] = max(param_values)
 
         result.append(item_result)
 
@@ -70,24 +74,19 @@ def form_report(data, search_param, date_filter):
     if date_filter != "all":
         data = apply_filter(data, date_filter)
 
-    result = None
     match search_param:
         case "average":
-            result = calc_report_values(data, "url", "response_time", "avg")
+            return calc_report_values(data, "url", "response_time", "avg")
         case "browser":
-            result = calc_report_values(data, "http_user_agent")
-
-    return result
+            return calc_report_values(data, "http_user_agent")
+        case _:
+            return None
 
 
 def print_table(header, report):
-    table_data = []
-    for index, g_class in enumerate(report):
-        row = [index]
-        for keys in g_class:
-            row.append(g_class[keys])
-        table_data.append(row)
-
+    table_data = [
+        [index] + list(g_class.values()) for index, g_class in enumerate(report)
+    ]
     print(tabulate(table_data, header, tablefmt="grid"))
 
 
@@ -124,6 +123,10 @@ if __name__ == "__main__":
     report = form_report(log, args.report, args.date)
 
     # Вывод отчёта
+    if report == None:
+        print("Произошла ошибка")
+        exit()
+
     header = ["", "group", "total"]
     if [len(report[0].keys())]:
         header.append("calc_param")
