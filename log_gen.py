@@ -77,6 +77,17 @@ def calc_report_values(data, group="url", search_param="none", method="avg"):
 
     result = []
 
+    if group_data == []:
+        print("Возникла ошибка при группировке")
+        return None
+
+    if (
+        search_param not in group_data[next(iter(group_data))]
+        and search_param != "none"
+    ):
+        print(f"Поле {search_param} не обнаруженно в сгруппированных данных")
+        return None
+
     # Считаем отчёт по группам
     for group_key, values in group_data.items():
         item_result = {
@@ -96,6 +107,9 @@ def calc_report_values(data, group="url", search_param="none", method="avg"):
                     item_result[f"avg_{search_param}"] = min(param_values)
                 case "max":
                     item_result[f"avg_{search_param}"] = max(param_values)
+                case _:
+                    print(f"Метод рассчёта {method} не определён")
+                    return None
 
         result.append(item_result)
 
