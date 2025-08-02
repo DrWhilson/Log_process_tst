@@ -117,7 +117,7 @@ def print_table(header, report):
     print(tabulate(table_data, header, tablefmt="grid"))
 
 
-if __name__ == "__main__":
+def main():
     # Параметры
     parser = argparse.ArgumentParser(description="Генератор отчётов")
 
@@ -158,3 +158,7 @@ if __name__ == "__main__":
     if [len(report[0].keys())]:
         header.append("calc_param")
     print_table(header, report)
+
+
+if __name__ == "__main__":
+    main()
