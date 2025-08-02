@@ -136,7 +136,7 @@ def print_table(header, report):
     table_data = [
         [index] + list(g_class.values()) for index, g_class in enumerate(report)
     ]
-    print(tabulate(table_data, header, tablefmt="grid"))
+    print(tabulate(table_data, header, tablefmt="pipe"))
 
 
 def main():
