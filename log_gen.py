@@ -9,6 +9,10 @@ from tabulate import tabulate
 
 
 def load_log(path):
+    if not os.path.exists(path):
+        print(f"Файл {path} не найден")
+        return []
+
     with open(path, "r", encoding="utf-8") as file:
         return [json.loads(line) for line in file]
 
