@@ -58,6 +58,10 @@ def apply_filter(data, date_filter):
 def group_log(data, group_key):
     group_data = defaultdict(lambda: defaultdict(list))
 
+    if group_key not in data[0]:
+        print(f"Ключь {group_key} для группировки не найден в данных")
+        return []
+
     for item in data:
         group_value = item[group_key]
 
